@@ -3,171 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HarvestAI v2.0: Decision Support Agent</title>
+    <title>HarvestAI: Smart Agent</title>
     <style>
-        /* --- THEME: FUTURE ECO LAB --- */
-        :root { --primary: #00f2ff; --bg: #050505; --panel: rgba(20, 20, 20, 0.95); --text: #e0e0e0; }
-        
+        /* --- UI THEME: FUTURE ECO --- */
+        :root { --primary: #00ff88; --bg: #0a0a0a; --panel: #141414; --text: #e0e0e0; }
         body { 
             font-family: 'Segoe UI', Roboto, sans-serif; 
             background-color: var(--bg); color: var(--text); margin: 0; padding: 0;
             display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-            background-image: radial-gradient(circle at 50% 10%, #1a1a1a 0%, #000 70%);
         }
-
-        /* HEADER & STATS */
-        .header { 
-            width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #333; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-        }
-        .brand { font-size: 1.8rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; }
-        .stats-box { font-size: 0.9rem; color: #888; text-align: right; }
-        .stats-box b { color: var(--primary); font-size: 1.2rem; }
-
-        /* MAIN LAYOUT */
-        .main-container { 
-            display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; 
-            padding: 40px; width: 100%; max-width: 1300px; 
-        }
-
-        /* LEFT: VISION PANEL */
-        .vision-panel { flex: 1; min-width: 320px; max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
         
+        /* HUD HEADER */
+        .hud-header { 
+            width: 100%; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(20, 20, 20, 0.8); border-bottom: 1px solid #333; backdrop-filter: blur(10px);
+        }
+        .brand { font-size: 1.5rem; font-weight: bold; color: var(--primary); letter-spacing: 2px; }
+        .stats { display: flex; gap: 20px; font-size: 0.9rem; }
+        .stat-box b { color: var(--primary); font-size: 1.1rem; }
+
+        /* MAIN CONTENT */
+        .container { display: flex; flex-wrap: wrap; gap: 30px; padding: 30px; justify-content: center; width: 100%; max-width: 1200px; }
+
+        /* CAMERA PANEL */
+        .cam-panel { flex: 1; min-width: 320px; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
         #webcam-container { 
-            width: 100%; aspect-ratio: 1; border-radius: 20px; overflow: hidden; 
-            border: 3px solid #333; position: relative; background: #000;
-            box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+            width: 100%; aspect-ratio: 1; background: #000; border-radius: 20px; 
+            border: 2px solid #333; overflow: hidden; position: relative;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.1);
         }
-        #webcam-container canvas { width: 100%; height: 100%; object-fit: cover; }
-        
-        .manual-input { width: 100%; display: flex; gap: 10px; }
-        input { 
-            flex: 1; padding: 15px; border-radius: 10px; border: 1px solid #333; 
-            background: #111; color: white; outline: none; transition: 0.3s;
+        .cam-controls { display: flex; gap: 10px; }
+        .btn { 
+            flex: 1; padding: 15px; border: none; border-radius: 10px; cursor: pointer; 
+            font-weight: bold; font-size: 1rem; transition: 0.2s;
         }
-        input:focus { border-color: var(--primary); }
-        .btn-search { padding: 0 25px; background: #333; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.2rem; }
-        .btn-search:hover { background: var(--primary); color: #000; }
+        .btn-start { background: var(--primary); color: #000; }
+        .btn-stop { background: #ff4444; color: white; opacity: 0.5; pointer-events: none; }
+        .active .btn-stop { opacity: 1; pointer-events: all; }
+        .active .btn-start { opacity: 0.5; pointer-events: none; }
 
-        /* RIGHT: INTELLIGENCE AGENT */
+        /* AGENT PANEL */
         .agent-panel { 
-            flex: 1; min-width: 320px; background: var(--panel); border-radius: 20px; padding: 30px;
-            border: 1px solid #333; min-height: 500px; display: flex; flex-direction: column;
-            position: relative;
+            flex: 1; min-width: 320px; background: var(--panel); border-radius: 20px; padding: 25px;
+            border: 1px solid #333; display: flex; flex-direction: column; gap: 20px;
+            min-height: 450px;
         }
+        .agent-title { font-size: 1.8rem; border-bottom: 1px solid #333; padding-bottom: 15px; color: var(--primary); }
+        .info-group { opacity: 0; transform: translateY(10px); transition: 0.5s all; }
+        .visible { opacity: 1; transform: translateY(0); }
         
-        .agent-header { 
-            border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .part-title { font-size: 2rem; font-weight: bold; color: white; }
-        .agent-status { font-size: 0.8rem; color: #00ff00; letter-spacing: 1px; font-weight: bold; }
-
-        /* DATA BLOCKS */
-        .data-block { margin-bottom: 25px; opacity: 0; transform: translateY(10px); transition: 0.5s all; }
-        .data-label { color: var(--primary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-        .data-content { font-size: 1.1rem; line-height: 1.6; color: #ddd; }
+        .label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        .text-content { font-size: 1rem; line-height: 1.5; color: #ccc; margin-bottom: 15px; }
         
-        /* ACTION BUTTONS */
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: auto; opacity: 0; pointer-events: none; transition: 0.5s; }
-        .btn-action {
-            padding: 15px; border: 1px solid #333; background: rgba(255,255,255,0.05); color: white;
-            border-radius: 10px; cursor: pointer; text-align: left; transition: 0.3s;
+        /* INTERNET SEARCH BUTTONS */
+        .web-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+        .btn-web { 
+            background: #222; color: white; padding: 12px; border: 1px solid #444; border-radius: 8px; cursor: pointer; text-align: left;
         }
-        .btn-action:hover { border-color: var(--primary); background: rgba(0, 242, 255, 0.1); }
-        .btn-action span { display: block; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
-        .btn-action b { font-size: 1rem; color: var(--primary); }
+        .btn-web:hover { border-color: var(--primary); background: #2a2a2a; }
+        .btn-web span { font-size: 0.7rem; color: #888; display: block; }
 
-        /* VISIBILITY CLASS */
-        .visible { opacity: 1; transform: translateY(0); pointer-events: all !important; }
-
-        /* START BUTTON OVERLAY */
-        #start-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
-            z-index: 10;
-        }
-        .btn-big { padding: 20px 50px; font-size: 1.5rem; font-weight: bold; background: var(--primary); border: none; border-radius: 50px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="brand">HarvestAI <span style="font-size:0.5em; opacity:0.5;">v2.0</span></div>
-        <div class="stats-box">
-            E-WASTE DIVERTED<br>
-            <b id="waste-counter">0g</b>
+    <div class="hud-header">
+        <div class="brand">HarvestAI <span style="font-size:0.6em; opacity:0.6;">V3.0</span></div>
+        <div class="stats">
+            <div class="stat-box">COMPONENTS RESCUED: <b id="count">0</b></div>
+            <div class="stat-box">CO₂ PREVENTED: <b id="co2">0g</b></div>
         </div>
     </div>
 
-    <div class="main-container">
+    <div class="container">
         
-        <div class="vision-panel">
-            <div id="webcam-container">
-                <div id="start-overlay">
-                    <button class="btn-big" onclick="init()">👁️ ACTIVATE SYSTEM</button>
-                </div>
+        <div class="cam-panel" id="cam-panel">
+            <div id="webcam-container"></div>
+            <div class="cam-controls">
+                <button class="btn btn-start" onclick="init()">▶ START CAMERA</button>
+                <button class="btn btn-stop" onclick="stopCamera()">⏹ STOP CAMERA</button>
             </div>
-            
-            <div class="manual-input">
-                <input type="text" id="manual-search" placeholder="Type component name manually..." onkeypress="if(event.key==='Enter') manualSearch()">
-                <button class="btn-search" onclick="manualSearch()">🔍</button>
-            </div>
+            <input type="text" id="manual-input" placeholder="Or type component name..." 
+                   style="padding:15px; background:#111; border:1px solid #333; color:white; border-radius:10px;"
+                   onkeypress="if(event.key==='Enter') manualSearch()">
         </div>
 
         <div class="agent-panel">
-            <div class="agent-header">
-                <span class="part-title" id="part-title">Standby...</span>
-                <span class="agent-status" id="agent-status">IDLE</span>
-            </div>
-
-            <div id="agent-content">
-                <div class="data-block" id="block-wiki">
-                    <span class="data-label">Global Knowledge (Wikipedia API)</span>
-                    <div class="data-content" id="wiki-text">Waiting for input. Scan a component or type a name to fetch live intelligence.</div>
+            <div class="agent-title" id="part-name">Waiting for Input...</div>
+            
+            <div id="agent-body">
+                <div class="info-group" id="info-safety">
+                    <span class="label">AI Safety Analysis</span>
+                    <div class="text-content" id="safety-text">--</div>
                 </div>
 
-                <div class="data-block" id="block-safe">
-                    <span class="data-label">AI Safety Analysis</span>
-                    <div class="data-content" id="safety-text">--</div>
+                <div class="info-group" id="info-desc">
+                    <span class="label">Live Knowledge (Wikipedia)</span>
+                    <div class="text-content" id="wiki-text">--</div>
                 </div>
 
-                <div class="action-grid" id="action-buttons">
-                    <button class="btn-action" onclick="openLink('hackster')">
-                        <span>SEARCH REPOSITORY</span>
-                        <b>Hackster.io Projects</b>
+                <div class="web-actions" id="web-btns" style="opacity:0.5; pointer-events:none;">
+                    <button class="btn-web" onclick="searchWeb('project')">
+                        <span>FIND IMPROVEMENTS</span>
+                        <b>💡 New Projects (2026)</b>
                     </button>
-                    <button class="btn-action" onclick="openLink('instructables')">
-                        <span>SEARCH REPOSITORY</span>
-                        <b>Instructables.com</b>
-                    </button>
-                    <button class="btn-action" onclick="openLink('datasheet')">
+                    <button class="btn-web" onclick="searchWeb('datasheet')">
                         <span>TECHNICAL SPECS</span>
-                        <b>Find Datasheet (PDF)</b>
+                        <b>📄 Datasheet & Pinout</b>
                     </button>
-                    <button class="btn-action" onclick="openLink('recycle')">
-                        <span>END OF LIFE</span>
-                        <b>Recycling Centers</b>
+                    <button class="btn-web" onclick="searchWeb('recycle')">
+                        <span>RESPONSIBLE DISPOSAL</span>
+                        <b>♻️ Recycling Map</b>
+                    </button>
+                    <button class="btn-web" onclick="searchWeb('shop')">
+                        <span>MISSING PARTS?</span>
+                        <b>🛒 Buy Accessories</b>
                     </button>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <script>
         
-        // 🔴 STEP 1: PASTE YOUR TEACHABLE MACHINE MODEL URL HERE
+        // 🔴 PASTE YOUR TEACHABLE MACHINE URL HERE
         const URL = "https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID_HERE/";
 
         let model, webcam, maxPredictions, isRunning = false;
         let lastDetected = "";
-        let currentComponent = "";
-        let totalWaste = 0;
+        let currentPart = "";
+        let totalCount = 0;
+        let totalCO2 = 0;
+        let loopId;
 
-        // --- 1. INITIALIZE VISION SYSTEM ---
+        // --- CAMERA CONTROL ---
         async function init() {
             if(isRunning) return;
             
@@ -182,22 +153,35 @@
                 webcam = new tmImage.Webcam(400, 400, flip); 
                 await webcam.setup(); 
                 await webcam.play();
-                window.requestAnimationFrame(loop);
-
-                document.getElementById("webcam-container").innerHTML = ""; // Clear overlay
-                document.getElementById("webcam-container").appendChild(webcam.canvas);
                 
+                // Clear old canvas if exists
+                const container = document.getElementById("webcam-container");
+                container.innerHTML = "";
+                container.appendChild(webcam.canvas);
+
+                loop();
                 isRunning = true;
-                setStatus("SCANNING...");
+                document.getElementById("cam-panel").classList.add("active");
             } catch (e) {
-                alert("Error: Please paste your Model URL in the code!");
+                alert("Error: Check your Model URL!");
+            }
+        }
+
+        function stopCamera() {
+            if(webcam && isRunning) {
+                webcam.stop();
+                cancelAnimationFrame(loopId);
+                isRunning = false;
+                document.getElementById("cam-panel").classList.remove("active");
+                document.getElementById("webcam-container").innerHTML = "<div style='display:flex;align-items:center;justify-content:center;height:100%;color:#555;'>CAMERA STOPPED</div>";
             }
         }
 
         async function loop() {
+            if(!isRunning) return;
             webcam.update(); 
             await predict();
-            window.requestAnimationFrame(loop);
+            loopId = requestAnimationFrame(loop);
         }
 
         async function predict() {
@@ -212,92 +196,81 @@
                 }
             }
 
-            // High Confidence Threshold (95%)
             if (highestProb > 0.95 && bestClass !== "Background" && bestClass !== lastDetected) {
-                triggerAgent(bestClass);
                 lastDetected = bestClass;
-                // Cooldown to prevent spamming
-                setTimeout(() => { lastDetected = ""; }, 5000);
+                triggerAgent(bestClass);
+                
+                // Update Stats
+                totalCount++;
+                totalCO2 += 150; // Approx 150g CO2 saved per electronic reused
+                document.getElementById("count").innerText = totalCount;
+                document.getElementById("co2").innerText = totalCO2 + "g";
+                
+                // Reset detection lock
+                setTimeout(() => { lastDetected = ""; }, 4000);
             }
         }
 
-        // --- 2. THE INTELLIGENCE AGENT (RAG) ---
-        
+        // --- AGENT LOGIC ---
         function manualSearch() {
-            const query = document.getElementById("manual-search").value;
-            if(query) triggerAgent(query);
+            const val = document.getElementById("manual-input").value;
+            if(val) triggerAgent(val);
         }
 
-        async function triggerAgent(name) {
-            currentComponent = name;
-            document.getElementById("part-title").innerText = name;
-            setStatus("FETCHING DATA...");
+        async function triggerAgent(partName) {
+            currentPart = partName;
+            document.getElementById("part-name").innerText = partName;
             
-            // A. Update Impact Counter (Gamification)
-            totalWaste += 25; // Approx grams per component
-            document.getElementById("waste-counter").innerText = totalWaste + "g";
+            // 1. Safety Logic
+            let safety = "✅ Safe to handle. Standard e-waste protocols apply.";
+            if(partName.toLowerCase().includes("battery")) safety = "⚠️ FIRE RISK: Do not puncture. Tape terminals.";
+            if(partName.toLowerCase().includes("capacitor")) safety = "⚡ SHOCK RISK: Discharge before handling.";
+            document.getElementById("safety-text").innerText = safety;
 
-            // B. Live Knowledge Retrieval (Wikipedia API)
-            const wikiData = await fetchWikipedia(name);
-            document.getElementById("wiki-text").innerText = wikiData;
-
-            // C. Safety Heuristics
-            const safetyMsg = analyzeSafety(name, wikiData);
-            document.getElementById("safety-text").innerText = safetyMsg;
-            
-            // D. Reveal UI Elements
-            document.querySelectorAll(".data-block").forEach(el => el.classList.add("visible"));
-            document.getElementById("action-buttons").classList.add("visible");
-            setStatus("ACTIVE");
-
-            // E. Voice Output
-            speak(`Identified ${name}. ${safetyMsg.split('.')[0]}.`);
-        }
-
-        async function fetchWikipedia(query) {
+            // 2. Wikipedia API (The "Internet" Search)
+            document.getElementById("wiki-text").innerText = "Fetching live definition...";
             try {
-                // Fetch summary from Wikipedia
-                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${query}`);
+                const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${partName}`);
                 const data = await res.json();
-                return data.extract || "No direct Wikipedia definition found. Use the search buttons below.";
-            } catch (e) {
-                return "Offline Mode: Could not connect to Knowledge Base.";
+                document.getElementById("wiki-text").innerText = data.extract || "No specific wiki definition found. Try the web buttons below.";
+            } catch(e) {
+                document.getElementById("wiki-text").innerText = "Offline mode.";
             }
+
+            // 3. Enable Internet Buttons
+            document.getElementById("web-btns").style.opacity = "1";
+            document.getElementById("web-btns").style.pointerEvents = "all";
+            
+            // 4. Voice
+            speak(partName + " detected.");
+            
+            // 5. Auto-reveal animations
+            document.querySelectorAll(".info-group").forEach(el => el.classList.add("visible"));
         }
 
-        function analyzeSafety(name, context) {
-            const text = (name + " " + context).toLowerCase();
-            
-            // Simple Rule-Based Safety Engine
-            if (text.includes("battery") || text.includes("lithium")) 
-                return "⚠️ FIRE RISK. Do not puncture. Tape terminals immediately.";
-            if (text.includes("capacitor") || text.includes("high voltage")) 
-                return "⚡ SHOCK RISK. High voltage potential. Discharge before handling.";
-            if (text.includes("solder") || text.includes("lead")) 
-                return "☠️ TOXIC HAZARD. Contains lead. Wash hands after handling.";
-            if (text.includes("arduino") || text.includes("microcontroller")) 
-                return "✅ SAFE (Low Voltage). Check for 5V regulator overheating.";
-            
-            return "✅ Standard E-Waste. Safe to handle with basic precautions.";
-        }
-
-        // --- 3. DYNAMIC LINKS ---
-        function openLink(type) {
-            if(!currentComponent) return;
+        // --- INTERNET SEARCH ACTIONS ---
+        function searchWeb(type) {
+            if(!currentPart) return;
             let url = "";
             switch(type) {
-                case 'hackster': url = `https://www.hackster.io/search?q=${currentComponent}&sort_by=recent`; break;
-                case 'instructables': url = `https://www.instructables.com/search/?q=${currentComponent}&projects=all`; break;
-                case 'datasheet': url = `https://www.google.com/search?q=${currentComponent}+datasheet+pdf`; break;
-                case 'recycle': url = `https://www.google.com/maps/search/e-waste+recycling+near+me`; break;
+                case 'project': // "Go through internet for improvements"
+                    url = `https://www.google.com/search?q=advanced+projects+using+${currentPart}+2026+upcycling+ideas`;
+                    break;
+                case 'datasheet':
+                    url = `https://www.google.com/search?q=${currentPart}+datasheet+pinout+pdf`;
+                    break;
+                case 'recycle': // "More improvements" -> Sustainability
+                    url = `https://www.google.com/maps/search/e-waste+recycling+centers+near+me`;
+                    break;
+                case 'shop':
+                    url = `https://www.google.com/search?q=buy+accessories+for+${currentPart}`;
+                    break;
             }
             window.open(url, '_blank');
         }
 
-        function setStatus(text) { document.getElementById("agent-status").innerText = text; }
-
         function speak(text) {
-            if ('speechSynthesis' in window) {
+            if('speechSynthesis' in window) {
                 const u = new SpeechSynthesisUtterance(text);
                 window.speechSynthesis.speak(u);
             }
