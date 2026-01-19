@@ -101,41 +101,6 @@ Users must follow institutional safety and disposal guidelines.
 - Integration with institutional recycling systems
 
 ---
-flowchart TD
-    subgraph Client_Side_Browser ["🛡️ Client-Side Browser (Privacy Layer)"]
-        User((Student)) -->|Shows Component| Cam[Webcam Input]
-        User -->|Types Name| Manual[Manual Input]
-        
-        Cam -->|Video Stream| Vision[TensorFlow.js / MobileNet]
-        Vision -->|Classifies| Confidence{Confidence > 95%?}
-        
-        Confidence -- No --> Loop[Wait / User Retry]
-        Confidence -- Yes --> Agent[HarvestAI Logic Agent]
-        Manual --> Agent
-        
-        subgraph Logic_Core ["🧠 Intelligence Core"]
-            Agent -->|Request Info| WikiAPI[Wikipedia RAG]
-            Agent -->|Analyze Text| Safety[⚠️ Safety Heuristics Engine]
-            Agent -->|Update Stats| Impact[Gamification Counter]
-        end
-        
-        Safety -->|Text-to-Speech| Voice[Voice Warning]
-        WikiAPI -->|Context Data| UI[Display Result Card]
-        Agent -->|Generate Link| Ext[External Search]
-    end
-    
-    subgraph External_Web ["🌐 External World"]
-        WikiAPI <-->|Fetch Data| WikipediaServer((Wikipedia API))
-        Ext -->|User Clicks| Hackster((Project Repos))
-    end
-    
-    classDef safe fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef danger fill:#ffccbc,stroke:#bf360c,stroke-width:2px;
-    classDef ai fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    
-    class Vision,Agent,WikiAPI ai;
-    class Safety danger;
-    class Client_Side_Browser safe;
 
 ## 📄 License
 
